@@ -1,0 +1,98 @@
+{
+  "eras": [
+    {
+      "name": "Policy Intellectual Era",
+      "id": "intellectual",
+      "start": "1962-01-01",
+      "end": "1972-12-31",
+      "color": "#4A90D9",
+      "description": "Economists left and right proposed guaranteed income"
+    },
+    {
+      "name": "Wilderness Years",
+      "id": "wilderness",
+      "start": "1973-01-01",
+      "end": "2007-12-31",
+      "color": "#7A7A7A",
+      "description": "The idea retreated to academia and Alaska"
+    },
+    {
+      "name": "Silicon Valley Awakening",
+      "id": "silicon",
+      "start": "2008-01-01",
+      "end": "2016-11-05",
+      "color": "#F5A623",
+      "description": "Tech elite feared automation would end work"
+    },
+    {
+      "name": "Yang Gang Era",
+      "id": "yang",
+      "start": "2017-11-06",
+      "end": "2020-02-11",
+      "color": "#1F78B4",
+      "description": "A presidential campaign made UBI mainstream"
+    },
+    {
+      "name": "COVID Stimulus",
+      "id": "covid",
+      "start": "2020-03-01",
+      "end": "2020-12-31",
+      "color": "#E31A1C",
+      "description": "Crisis compressed 58 years into 11 days"
+    },
+    {
+      "name": "Aftermath",
+      "id": "aftermath",
+      "start": "2021-01-01",
+      "end": "2023-12-31",
+      "color": "#33A02C",
+      "description": "The window ratcheted higher"
+    }
+  ],
+  "events": [
+    {"date": "1962-01-01", "title": "Friedman proposes Negative Income Tax", "era": "intellectual", "type": "publication", "figure": "Milton Friedman", "importance": "high"},
+    {"date": "1967-06-01", "title": "MLK advocates guaranteed income", "era": "intellectual", "type": "publication", "figure": "Martin Luther King Jr.", "importance": "high"},
+    {"date": "1968-05-01", "title": "1,200 economists sign petition", "era": "intellectual", "type": "petition", "importance": "medium"},
+    {"date": "1969-08-08", "title": "Nixon proposes Family Assistance Plan", "era": "intellectual", "type": "policy", "figure": "Richard Nixon", "importance": "high"},
+    {"date": "1970-04-16", "title": "House passes FAP (243-155)", "era": "intellectual", "type": "legislative", "importance": "high"},
+    {"date": "1970-12-01", "title": "Senate kills FAP", "era": "intellectual", "type": "legislative", "importance": "high"},
+    {"date": "1972-01-01", "title": "McGovern proposes $1,000 demogrant", "era": "intellectual", "type": "campaign", "figure": "George McGovern", "importance": "medium"},
+    {"date": "1972-11-07", "title": "Nixon landslide; demogrant blamed", "era": "intellectual", "type": "election", "importance": "medium"},
+    {"date": "1975-03-29", "title": "EITC enacted as NIT alternative", "era": "wilderness", "type": "legislative", "importance": "medium"},
+    {"date": "1976-11-02", "title": "Alaska Permanent Fund established", "era": "wilderness", "type": "state", "figure": "Jay Hammond", "importance": "high"},
+    {"date": "1982-06-14", "title": "First Alaska PFD: $1,000/person", "era": "wilderness", "type": "dividend", "importance": "high"},
+    {"date": "1986-01-01", "title": "BIEN founded in Europe", "era": "wilderness", "type": "organization", "importance": "low"},
+    {"date": "2013-09-17", "title": "Oxford: 47% of jobs at automation risk", "era": "silicon", "type": "research", "importance": "high"},
+    {"date": "2016-01-01", "title": "Y Combinator announces UBI study", "era": "silicon", "type": "announcement", "figure": "Sam Altman", "importance": "high"},
+    {"date": "2016-05-31", "title": "Y Combinator Oakland pilot launches", "era": "silicon", "type": "pilot", "importance": "medium"},
+    {"date": "2016-06-05", "title": "Swiss reject UBI referendum (77%)", "era": "silicon", "type": "international", "importance": "medium"},
+    {"date": "2016-11-01", "title": "Musk: 'Automation makes UBI necessary'", "era": "silicon", "type": "statement", "figure": "Elon Musk", "importance": "medium"},
+    {"date": "2017-11-06", "title": "Andrew Yang files for President", "era": "yang", "type": "campaign", "figure": "Andrew Yang", "importance": "high"},
+    {"date": "2018-04-03", "title": "War on Normal People published", "era": "yang", "type": "publication", "figure": "Andrew Yang", "importance": "medium"},
+    {"date": "2019-02-01", "title": "Stockton SEED pilot launches", "era": "yang", "type": "pilot", "figure": "Michael Tubbs", "importance": "high"},
+    {"date": "2019-06-26", "title": "Yang in first Democratic debate", "era": "yang", "type": "debate", "figure": "Andrew Yang", "importance": "high"},
+    {"date": "2019-09-12", "title": "Yang announces Freedom Dividend giveaway", "era": "yang", "type": "debate", "figure": "Andrew Yang", "importance": "medium"},
+    {"date": "2020-02-11", "title": "Yang suspends campaign", "era": "yang", "type": "campaign", "figure": "Andrew Yang", "importance": "high"},
+    {"date": "2020-03-11", "title": "WHO declares COVID pandemic", "era": "covid", "type": "crisis", "importance": "high"},
+    {"date": "2020-03-27", "title": "CARES Act: $1,200 per adult", "era": "covid", "type": "legislative", "importance": "critical"},
+    {"date": "2020-06-01", "title": "Mayors for Guaranteed Income founded", "era": "covid", "type": "organization", "figure": "Michael Tubbs", "importance": "medium"},
+    {"date": "2020-12-27", "title": "Second stimulus: $600 per adult", "era": "covid", "type": "legislative", "importance": "high"},
+    {"date": "2021-03-11", "title": "American Rescue Plan: $1,400 + CTC", "era": "aftermath", "type": "legislative", "figure": "Joe Biden", "importance": "high"},
+    {"date": "2021-07-15", "title": "First monthly Child Tax Credit payments", "era": "aftermath", "type": "implementation", "importance": "high"},
+    {"date": "2021-12-31", "title": "Expanded CTC expires", "era": "aftermath", "type": "policy_end", "importance": "high"},
+    {"date": "2023-01-01", "title": "100+ pilot programs active in US", "era": "aftermath", "type": "milestone", "importance": "medium"},
+    {"date": "2023-11-03", "title": "California launches state GI program", "era": "aftermath", "type": "state", "importance": "medium"}
+  ],
+  "key_figures": [
+    {"name": "Milton Friedman", "years": "1962-2006", "role": "Negative Income Tax architect", "position": "right"},
+    {"name": "Martin Luther King Jr.", "years": "1967-1968", "role": "Guaranteed income advocate", "position": "left"},
+    {"name": "Richard Nixon", "years": "1969-1972", "role": "FAP proponent", "position": "right"},
+    {"name": "Andrew Yang", "years": "2017-present", "role": "Freedom Dividend champion", "position": "center"},
+    {"name": "Michael Tubbs", "years": "2019-present", "role": "Stockton SEED & MGI founder", "position": "left"}
+  ],
+  "polling": [
+    {"date": "1969-10-01", "support": 51, "source": "Harris", "context": "FAP"},
+    {"date": "2019-02-01", "support": 43, "source": "Hill-HarrisX", "context": "Permanent UBI"},
+    {"date": "2019-09-01", "support": 49, "source": "Hill-HarrisX", "context": "Permanent UBI"}
+  ]
+}

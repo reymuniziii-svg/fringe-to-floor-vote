@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>From Fringe to Floor Vote | The Attention Economics of Universal Basic Income</title>
+
+    <!-- OpenGraph -->
+    <meta property="og:title" content="From Fringe to Floor Vote">
+    <meta property="og:description" content="How Universal Basic Income traveled from academic obscurity to pandemic policy in 58 years.">
+    <meta property="og:type" content="website">
+
+    <!-- D3.js -->
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+
+    <!-- Scrollama -->
+    <script src="https://unpkg.com/scrollama@3.2.0/build/scrollama.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Era colors */
+            --intellectual: #4A90D9;
+            --wilderness: #7A7A7A;
+            --silicon: #F5A623;
+            --yang: #1F78B4;
+            --covid: #E31A1C;
+            --aftermath: #33A02C;
+
+            /* Data layers */
+            --academic: #9B5DE5;
+            --media: #3D5A80;
+            --public: #2EEB78;
+            --policy: #E07A5F;
+
+            /* Background */
+            --paper: #FAF8F5;
+            --ink: #2C2C2C;
+            --ink-light: #4a4a4a;
+
+            /* Typography scale */
+            --text-xs: 0.75rem;
+            --text-sm: 0.875rem;
+            --text-base: 1rem;
+            --text-lg: 1.125rem;
+            --text-xl: 1.25rem;
+            --text-2xl: 1.5rem;
+            --text-3xl: 2rem;
+            --text-4xl: 2.5rem;
+            --text-5xl: 3rem;
+            --text-6xl: 4rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            font-weight: 400;
+            line-height: 1.6;
+            color: var(--ink);
+            background: var(--paper);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'EB Garamond', Georgia, serif;
+            font-weight: 400;
+            line-height: 1.2;
+        }
+
+        .mono {
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            position: relative;
+        }
+
+        .hero__eyebrow {
+            font-size: var(--text-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 1rem;
+        }
+
+        .hero__title {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            max-width: 900px;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+        }
+
+        .hero__subtitle {
+            font-size: var(--text-xl);
+            max-width: 600px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 3rem;
+            line-height: 1.7;
+        }
+
+        .hero__hook {
+            font-size: var(--text-2xl);
+            font-family: 'EB Garamond', serif;
+            font-style: italic;
+            max-width: 700px;
+            color: rgba(255,255,255,0.9);
+            padding: 2rem;
+            border-left: 3px solid var(--intellectual);
+            text-align: left;
+            margin-bottom: 3rem;
+        }
+
+        .hero__scroll {
+            position: absolute;
+            bottom: 2rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        /* Scrollytelling Container */
+        .scrolly {
+            position: relative;
+        }
+
+        .scrolly__graphic {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--paper);
+            z-index: 1;
+        }
+
+        .scrolly__chart {
+            width: 100%;
+            max-width: 1200px;
+            height: 60vh;
+            padding: 2rem;
+        }
+
+        .scrolly__steps {
+            position: relative;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .step {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2rem;
+            pointer-events: auto;
+        }
+
+        .step__content {
+            background: white;
+            padding: 2rem 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 420px;
+            margin-left: 5%;
+        }
+
+        .step__era {
+            font-size: var(--text-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .step__era.intellectual { color: var(--intellectual); }
+        .step__era.wilderness { color: var(--wilderness); }
+        .step__era.silicon { color: var(--silicon); }
+        .step__era.yang { color: var(--yang); }
+        .step__era.covid { color: var(--covid); }
+        .step__era.aftermath { color: var(--aftermath); }
+
+        .step__title {
+            font-size: var(--text-2xl);
+            margin-bottom: 1rem;
+        }
+
+        .step__text {
+            font-size: var(--text-base);
+            color: var(--ink-light);
+            line-height: 1.8;
+        }
+
+        .step__aha {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f8f7f4;
+            border-radius: 8px;
+            font-style: italic;
+            font-family: 'EB Garamond', serif;
+            font-size: var(--text-lg);
+        }
+
+        .step__stat {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: var(--text-4xl);
+            font-weight: 300;
+            margin: 1rem 0;
+        }
+
+        /* Timeline Chart */
+        .timeline-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .axis text {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 12px;
+            fill: var(--ink-light);
+        }
+
+        .axis path,
+        .axis line {
+            stroke: #ddd;
+        }
+
+        .era-band {
+            opacity: 0.15;
+        }
+
+        .trend-line {
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .trend-area {
+            opacity: 0.2;
+        }
+
+        .event-marker {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .event-marker:hover {
+            transform: scale(1.3);
+        }
+
+        .event-label {
+            font-size: 11px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            fill: var(--ink);
+            pointer-events: none;
+        }
+
+        /* Era Labels */
+        .era-label {
+            font-size: 14px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Conclusion */
+        .conclusion {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(180deg, var(--paper) 0%, #f0ede8 100%);
+        }
+
+        .conclusion__title {
+            font-size: var(--text-4xl);
+            max-width: 800px;
+            margin-bottom: 2rem;
+        }
+
+        .conclusion__lifecycle {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 3rem 0;
+            max-width: 900px;
+        }
+
+        .lifecycle-stage {
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            color: white;
+        }
+
+        .lifecycle-stage:nth-child(1) { background: var(--academic); }
+        .lifecycle-stage:nth-child(2) { background: var(--wilderness); }
+        .lifecycle-stage:nth-child(3) { background: var(--silicon); }
+        .lifecycle-stage:nth-child(4) { background: var(--yang); }
+        .lifecycle-stage:nth-child(5) { background: var(--covid); }
+        .lifecycle-stage:nth-child(6) { background: var(--aftermath); }
+
+        .lifecycle-arrow {
+            display: flex;
+            align-items: center;
+            color: var(--ink-light);
+            font-size: 1.5rem;
+        }
+
+        .conclusion__insight {
+            font-size: var(--text-xl);
+            max-width: 700px;
+            color: var(--ink-light);
+            line-height: 1.8;
+            margin-top: 2rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            background: #1a1a2e;
+            color: rgba(255,255,255,0.6);
+            font-size: var(--text-sm);
+        }
+
+        footer a {
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 1000;
+            max-width: 280px;
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+        }
+
+        .tooltip__date {
+            font-size: var(--text-xs);
+            color: var(--ink-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .tooltip__title {
+            font-size: var(--text-base);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .tooltip__figure {
+            font-size: var(--text-sm);
+            color: var(--ink-light);
+            font-style: italic;
+        }
+
+        /* Loading */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--paper);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading__spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e0e0e0;
+            border-top-color: var(--ink);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .step__content {
+                margin-left: 0;
+                margin: 0 auto;
+            }
+
+            .hero__title {
+                font-size: 2.5rem;
+            }
+
+            .conclusion__lifecycle {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .lifecycle-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading" id="loading">
+        <div class="loading__spinner"></div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip">
+        <div class="tooltip__date"></div>
+        <div class="tooltip__title"></div>
+        <div class="tooltip__figure"></div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero__eyebrow">Attention Economics</div>
+        <h1 class="hero__title">From Fringe to Floor Vote</h1>
+        <p class="hero__subtitle">
+            How Universal Basic Income traveled from academic obscurity to pandemic policy in 58 years.
+        </p>
+        <blockquote class="hero__hook">
+            In 1962, the most radical economic idea in America was supported by both Milton Friedman and Martin Luther King Jr.<br><br>
+            Then it disappeared for 50 years.
+        </blockquote>
+        <div class="hero__scroll">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M12 5v14M19 12l-7 7-7-7"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Scrollytelling -->
+    <section class="scrolly" id="scrolly">
+        <div class="scrolly__graphic">
+            <div class="scrolly__chart" id="chart"></div>
+        </div>
+
+        <div class="scrolly__steps">
+            <!-- Step 1: The Beginning -->
+            <div class="step" data-step="1" data-era="intellectual">
+                <div class="step__content">
+                    <div class="step__era intellectual">1962 - 1972</div>
+                    <h2 class="step__title">The Policy Intellectual Era</h2>
+                    <p class="step__text">
+                        Milton Friedman proposed the Negative Income Tax in 1962. Martin Luther King Jr. advocated for guaranteed income in 1967. In 1968, 1,200 economists signed a petition urging Congress to act.
+                    </p>
+                    <p class="step__text" style="margin-top: 1rem;">
+                        Nixon's Family Assistance Plan passed the House 243-155 in 1970. Then the Senate killed it.
+                    </p>
+                    <div class="step__aha">
+                        "Left and right agreed. It still wasn't enough."
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Wilderness -->
+            <div class="step" data-step="2" data-era="wilderness">
+                <div class="step__content">
+                    <div class="step__era wilderness">1973 - 2007</div>
+                    <h2 class="step__title">The Wilderness Years</h2>
+                    <div class="step__stat">35 years</div>
+                    <p class="step__text">
+                        The idea didn't die. It retreated to academia, academic journals, and one unlikely place: Alaska.
+                    </p>
+                    <p class="step__text" style="margin-top: 1rem;">
+                        Since 1982, every Alaskan has received an annual dividend from oil revenues. The only functioning UBI in America.
+                    </p>
+                    <div class="step__aha">
+                        "The idea went underground, waiting for its moment."
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Silicon Valley -->
+            <div class="step" data-step="3" data-era="silicon">
+                <div class="step__content">
+                    <div class="step__era silicon">2008 - 2016</div>
+                    <h2 class="step__title">The Silicon Valley Whisper</h2>
+                    <p class="step__text">
+                        In 2013, Oxford researchers predicted 47% of US jobs were at risk from automation. Tech billionaires took notice.
+                    </p>
+                    <p class="step__text" style="margin-top: 1rem;">
+                        Sam Altman funded a UBI study. Elon Musk said automation made UBI "necessary." The tech elite became the new think tank.
+                    </p>
+                    <div class="step__aha">
+                        "Fear of robots brought back an idea from 1962."
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Yang Gang -->
+            <div class="step" data-step="4" data-era="yang">
+                <div class="step__content">
+                    <div class="step__era yang">2017 - 2020</div>
+                    <h2 class="step__title">The Yang Gang Era</h2>
+                    <p class="step__text">
+                        Andrew Yang filed to run for President on November 6, 2017. His signature policy: $1,000/month for every American adult.
+                    </p>
+                    <p class="step__text" style="margin-top: 1rem;">
+                        He never won a primary. But by the time he dropped out in February 2020, UBI had gone from fringe idea to mainstream debate.
+                    </p>
+                    <div class="step__stat" style="color: var(--yang);">49%</div>
+                    <p class="step__text">of Americans supported permanent UBI by September 2019.</p>
+                    <div class="step__aha">
+                        "A presidential campaign is the most efficient attention hack in American politics."
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: COVID -->
+            <div class="step" data-step="5" data-era="covid">
+                <div class="step__content">
+                    <div class="step__era covid">March 2020</div>
+                    <h2 class="step__title">The Crisis Accelerant</h2>
+                    <div class="step__stat" style="color: var(--covid);">11 days</div>
+                    <p class="step__text">
+                        On March 11, 2020, the WHO declared a pandemic. On March 27, the CARES Act became law: $1,200 for every adult American.
+                    </p>
+                    <p class="step__text" style="margin-top: 1rem;">
+                        An idea that had taken 58 years to reach mainstream consciousness became federal policy in less than two weeks.
+                    </p>
+                    <div class="step__aha">
+                        "Crisis compresses decades into days."
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Aftermath -->
+            <div class="step" data-step="6" data-era="aftermath">
+                <div class="step__content">
+                    <div class="step__era aftermath">2021 - 2023</div>
+                    <h2 class="step__title">The Aftermath</h2>
+                    <p class="step__text">
+                        The emergency checks stopped. But the conversation didn't.
+                    </p>
+                    <div class="step__stat" style="color: var(--aftermath);">100+</div>
+                    <p class="step__text">
+                        pilot programs launched across America. The Child Tax Credit briefly gave families monthly payments. California created a state-funded guaranteed income program.
+                    </p>
+                    <p class="step__text" style="margin-top: 1rem;">
+                        The baseline of attention never returned to pre-pandemic levels.
+                    </p>
+                    <div class="step__aha">
+                        "The Overton window doesn't snap back. It ratchets."
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Conclusion -->
+    <section class="conclusion">
+        <h2 class="conclusion__title">The Attention Lifecycle of a Policy Idea</h2>
+
+        <div class="conclusion__lifecycle">
+            <span class="lifecycle-stage">FRINGE</span>
+            <span class="lifecycle-arrow">→</span>
+            <span class="lifecycle-stage">ACADEMIC</span>
+            <span class="lifecycle-arrow">→</span>
+            <span class="lifecycle-stage">ELITE WHISPER</span>
+            <span class="lifecycle-arrow">→</span>
+            <span class="lifecycle-stage">CHAMPION</span>
+            <span class="lifecycle-arrow">→</span>
+            <span class="lifecycle-stage">CRISIS</span>
+            <span class="lifecycle-arrow">→</span>
+            <span class="lifecycle-stage">MAINSTREAM</span>
+        </div>
+
+        <p class="conclusion__insight">
+            The question isn't whether your idea is good.<br><br>
+            It's whether you can survive the wilderness long enough to meet your crisis.
+        </p>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>
+            Data sources: <a href="https://trends.google.com">Google Trends</a>,
+            <a href="https://www.gdeltproject.org/">GDELT</a>,
+            <a href="https://api.congress.gov/">Congress.gov</a>
+        </p>
+        <p style="margin-top: 0.5rem;">
+            Built with D3.js and Scrollama
+        </p>
+    </footer>
+
+    <script>
+        // Data storage
+        let trendsData = [];
+        let milestonesData = null;
+        let currentStep = 0;
+
+        // Chart dimensions
+        let width, height, margin;
+        let svg, xScale, yScale;
+
+        // Era date ranges for highlighting
+        const eraRanges = {
+            intellectual: { start: new Date('1962-01-01'), end: new Date('1972-12-31') },
+            wilderness: { start: new Date('1973-01-01'), end: new Date('2007-12-31') },
+            silicon: { start: new Date('2008-01-01'), end: new Date('2016-11-05') },
+            yang: { start: new Date('2017-11-06'), end: new Date('2020-02-11') },
+            covid: { start: new Date('2020-03-01'), end: new Date('2020-12-31') },
+            aftermath: { start: new Date('2021-01-01'), end: new Date('2023-12-31') }
+        };
+
+        const eraColors = {
+            intellectual: '#4A90D9',
+            wilderness: '#7A7A7A',
+            silicon: '#F5A623',
+            yang: '#1F78B4',
+            covid: '#E31A1C',
+            aftermath: '#33A02C'
+        };
+
+        // Initialize
+        async function init() {
+            try {
+                // Load data
+                const [trends, milestones] = await Promise.all([
+                    fetch('data/trends_ubi.json').then(r => r.json()),
+                    fetch('data/milestones.json').then(r => r.json())
+                ]);
+
+                trendsData = trends.map(d => ({
+                    date: new Date(d.date),
+                    interest: d.interest
+                }));
+                milestonesData = milestones;
+
+                // Setup chart
+                setupChart();
+                drawChart();
+
+                // Setup scrollama
+                setupScrollama();
+
+                // Hide loading
+                document.getElementById('loading').classList.add('hidden');
+
+            } catch (err) {
+                console.error('Error loading data:', err);
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: red;">Error loading data</div>
+                    <div style="margin-top: 1rem;">Run via HTTP server: python3 -m http.server</div>
+                `;
+            }
+        }
+
+        function setupChart() {
+            const container = document.getElementById('chart');
+            const rect = container.getBoundingClientRect();
+
+            margin = { top: 40, right: 40, bottom: 60, left: 60 };
+            width = rect.width - margin.left - margin.right;
+            height = rect.height - margin.top - margin.bottom;
+
+            svg = d3.select('#chart')
+                .append('svg')
+                .attr('width', rect.width)
+                .attr('height', rect.height)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Scales
+            xScale = d3.scaleTime()
+                .domain([new Date('2004-01-01'), new Date('2023-12-31')])
+                .range([0, width]);
+
+            yScale = d3.scaleLinear()
+                .domain([0, 100])
+                .range([height, 0]);
+        }
+
+        function drawChart() {
+            // Draw era bands
+            Object.entries(eraRanges).forEach(([era, range]) => {
+                if (range.start >= new Date('2004-01-01')) {
+                    svg.append('rect')
+                        .attr('class', 'era-band')
+                        .attr('x', xScale(range.start))
+                        .attr('y', 0)
+                        .attr('width', Math.max(0, xScale(range.end) - xScale(range.start)))
+                        .attr('height', height)
+                        .attr('fill', eraColors[era])
+                        .attr('opacity', 0);
+                }
+            });
+
+            // X Axis
+            svg.append('g')
+                .attr('class', 'axis x-axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(xScale)
+                    .ticks(d3.timeYear.every(2))
+                    .tickFormat(d3.timeFormat('%Y')));
+
+            // Y Axis
+            svg.append('g')
+                .attr('class', 'axis y-axis')
+                .call(d3.axisLeft(yScale)
+                    .ticks(5)
+                    .tickFormat(d => d + '%'));
+
+            // Y Axis label
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -45)
+                .attr('x', -height / 2)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '12px')
+                .style('fill', '#666')
+                .text('Search Interest');
+
+            // Area generator
+            const area = d3.area()
+                .x(d => xScale(d.date))
+                .y0(height)
+                .y1(d => yScale(d.interest))
+                .curve(d3.curveMonotoneX);
+
+            // Line generator
+            const line = d3.line()
+                .x(d => xScale(d.date))
+                .y(d => yScale(d.interest))
+                .curve(d3.curveMonotoneX);
+
+            // Draw area
+            svg.append('path')
+                .datum(trendsData)
+                .attr('class', 'trend-area')
+                .attr('fill', '#2EEB78')
+                .attr('d', area);
+
+            // Draw line
+            svg.append('path')
+                .datum(trendsData)
+                .attr('class', 'trend-line')
+                .attr('stroke', '#2EEB78')
+                .attr('d', line);
+
+            // Draw key events
+            if (milestonesData && milestonesData.events) {
+                const keyEvents = milestonesData.events.filter(e =>
+                    e.importance === 'high' || e.importance === 'critical'
+                );
+
+                svg.selectAll('.event-marker')
+                    .data(keyEvents.filter(e => new Date(e.date) >= new Date('2004-01-01')))
+                    .enter()
+                    .append('circle')
+                    .attr('class', 'event-marker')
+                    .attr('cx', d => xScale(new Date(d.date)))
+                    .attr('cy', d => {
+                        // Find corresponding trend value
+                        const eventDate = new Date(d.date);
+                        const closest = trendsData.reduce((prev, curr) =>
+                            Math.abs(curr.date - eventDate) < Math.abs(prev.date - eventDate) ? curr : prev
+                        );
+                        return yScale(closest.interest);
+                    })
+                    .attr('r', 6)
+                    .attr('fill', d => eraColors[d.era] || '#666')
+                    .attr('stroke', 'white')
+                    .attr('stroke-width', 2)
+                    .on('mouseenter', (event, d) => showTooltip(event, d))
+                    .on('mouseleave', hideTooltip);
+            }
+        }
+
+        function updateChartForStep(step) {
+            const stepEra = document.querySelector(`[data-step="${step}"]`)?.dataset.era;
+
+            // Highlight current era band
+            svg.selectAll('.era-band')
+                .transition()
+                .duration(500)
+                .attr('opacity', function() {
+                    const rect = d3.select(this);
+                    // Check if this band corresponds to the current era
+                    const fill = rect.attr('fill');
+                    const currentColor = eraColors[stepEra];
+                    return fill === currentColor ? 0.25 : 0.05;
+                });
+
+            // Zoom to era time range if available
+            if (stepEra && eraRanges[stepEra]) {
+                const range = eraRanges[stepEra];
+                // Only zoom for eras within our data range
+                if (range.start >= new Date('2004-01-01')) {
+                    const padding = (range.end - range.start) * 0.1;
+                    xScale.domain([
+                        new Date(range.start.getTime() - padding),
+                        new Date(range.end.getTime() + padding)
+                    ]);
+                } else {
+                    // Reset to full range
+                    xScale.domain([new Date('2004-01-01'), new Date('2023-12-31')]);
+                }
+
+                // Update axis
+                svg.select('.x-axis')
+                    .transition()
+                    .duration(750)
+                    .call(d3.axisBottom(xScale)
+                        .ticks(6)
+                        .tickFormat(d3.timeFormat('%Y')));
+
+                // Update line and area
+                const area = d3.area()
+                    .x(d => xScale(d.date))
+                    .y0(height)
+                    .y1(d => yScale(d.interest))
+                    .curve(d3.curveMonotoneX);
+
+                const line = d3.line()
+                    .x(d => xScale(d.date))
+                    .y(d => yScale(d.interest))
+                    .curve(d3.curveMonotoneX);
+
+                svg.select('.trend-area')
+                    .transition()
+                    .duration(750)
+                    .attr('d', area(trendsData));
+
+                svg.select('.trend-line')
+                    .transition()
+                    .duration(750)
+                    .attr('d', line(trendsData));
+
+                // Update event markers
+                svg.selectAll('.event-marker')
+                    .transition()
+                    .duration(750)
+                    .attr('cx', d => xScale(new Date(d.date)))
+                    .attr('cy', d => {
+                        const eventDate = new Date(d.date);
+                        const closest = trendsData.reduce((prev, curr) =>
+                            Math.abs(curr.date - eventDate) < Math.abs(prev.date - eventDate) ? curr : prev
+                        );
+                        return yScale(closest.interest);
+                    });
+            }
+        }
+
+        function setupScrollama() {
+            const scroller = scrollama();
+
+            scroller
+                .setup({
+                    step: '.step',
+                    offset: 0.5,
+                    debug: false
+                })
+                .onStepEnter(response => {
+                    currentStep = response.index + 1;
+                    updateChartForStep(currentStep);
+                });
+
+            window.addEventListener('resize', scroller.resize);
+        }
+
+        function showTooltip(event, d) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.querySelector('.tooltip__date').textContent =
+                new Date(d.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            tooltip.querySelector('.tooltip__title').textContent = d.title;
+            tooltip.querySelector('.tooltip__figure').textContent = d.figure ? `— ${d.figure}` : '';
+
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY - 10) + 'px';
+            tooltip.classList.add('visible');
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('visible');
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
