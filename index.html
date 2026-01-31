@@ -401,12 +401,12 @@
             color: white;
         }
 
-        .lifecycle-stage:nth-child(1) { background: var(--academic); }
-        .lifecycle-stage:nth-child(2) { background: var(--wilderness); }
-        .lifecycle-stage:nth-child(3) { background: var(--silicon); }
-        .lifecycle-stage:nth-child(4) { background: var(--yang); }
-        .lifecycle-stage:nth-child(5) { background: var(--covid); }
-        .lifecycle-stage:nth-child(6) { background: var(--aftermath); }
+        .lifecycle-stage.fringe { background: var(--academic); }
+        .lifecycle-stage.academic { background: var(--wilderness); }
+        .lifecycle-stage.elite { background: var(--silicon); }
+        .lifecycle-stage.champion { background: var(--yang); }
+        .lifecycle-stage.crisis { background: var(--covid); }
+        .lifecycle-stage.mainstream { background: var(--aftermath); }
 
         .lifecycle-arrow {
             display: flex;
@@ -712,17 +712,17 @@
         <h2 class="conclusion__title">The Attention Lifecycle of a Policy Idea</h2>
 
         <div class="conclusion__lifecycle">
-            <span class="lifecycle-stage">FRINGE</span>
+            <span class="lifecycle-stage fringe">FRINGE</span>
             <span class="lifecycle-arrow">→</span>
-            <span class="lifecycle-stage">ACADEMIC</span>
+            <span class="lifecycle-stage academic">ACADEMIC</span>
             <span class="lifecycle-arrow">→</span>
-            <span class="lifecycle-stage">ELITE WHISPER</span>
+            <span class="lifecycle-stage elite">ELITE WHISPER</span>
             <span class="lifecycle-arrow">→</span>
-            <span class="lifecycle-stage">CHAMPION</span>
+            <span class="lifecycle-stage champion">CHAMPION</span>
             <span class="lifecycle-arrow">→</span>
-            <span class="lifecycle-stage">CRISIS</span>
+            <span class="lifecycle-stage crisis">CRISIS</span>
             <span class="lifecycle-arrow">→</span>
-            <span class="lifecycle-stage">MAINSTREAM</span>
+            <span class="lifecycle-stage mainstream">MAINSTREAM</span>
         </div>
 
         <p class="conclusion__insight">
