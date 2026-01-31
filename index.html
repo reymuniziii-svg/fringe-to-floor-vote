@@ -303,9 +303,12 @@
         .legend-line {
             width: 24px;
             height: 2px;
-            background: var(--public);
+            background: var(--signal);
             border-radius: 2px;
         }
+
+        .legend-line--policy { background: var(--policy); }
+        .legend-line--catalyst { background: var(--academic); }
 
         .legend-dot {
             width: 8px;
@@ -320,6 +323,46 @@
             height: 8px;
             background: var(--polling);
             transform: rotate(45deg);
+        }
+
+        .layer-toggle {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 2rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            z-index: 2;
+        }
+
+        .toggle-btn {
+            background: rgba(8, 12, 24, 0.75);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--ink-light);
+            padding: 0.4rem 0.75rem;
+            border-radius: 999px;
+            font-size: var(--text-xs);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .toggle-btn.active {
+            color: white;
+            border-color: rgba(89,245,255,0.5);
+            box-shadow: 0 0 12px rgba(89,245,255,0.35);
+        }
+
+        .toggle-btn--policy.active {
+            border-color: rgba(255,138,101,0.6);
+            box-shadow: 0 0 12px rgba(255,138,101,0.35);
+        }
+
+        .toggle-btn--catalyst.active {
+            border-color: rgba(176,132,245,0.6);
+            box-shadow: 0 0 12px rgba(176,132,245,0.35);
         }
 
         .scrolly__chart {
@@ -657,6 +700,12 @@
                 margin: 0 auto;
                 align-items: center;
             }
+
+            .layer-toggle {
+                left: 1rem;
+                right: 1rem;
+                justify-content: center;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -725,6 +774,14 @@
                     <span>Search interest</span>
                 </div>
                 <div class="legend-row">
+                    <span class="legend-line legend-line--policy"></span>
+                    <span>Policy actions (milestone density)</span>
+                </div>
+                <div class="legend-row">
+                    <span class="legend-line legend-line--catalyst"></span>
+                    <span>Catalyst density</span>
+                </div>
+                <div class="legend-row">
                     <span class="legend-dot"></span>
                     <span>Milestone</span>
                 </div>
@@ -732,6 +789,11 @@
                     <span class="legend-square"></span>
                     <span>Polling support</span>
                 </div>
+            </div>
+            <div class="layer-toggle" id="layerToggle">
+                <button class="toggle-btn toggle-btn--public active" data-layer="public">Public signal</button>
+                <button class="toggle-btn toggle-btn--policy active" data-layer="policy">Policy actions</button>
+                <button class="toggle-btn toggle-btn--catalyst" data-layer="catalyst">Catalysts</button>
             </div>
             <div class="scrolly__note">Google Trends data begins in 2004; earlier eras are shown via milestones.</div>
         </div>
@@ -892,6 +954,13 @@
         let eraColors = {};
         let eventPoints = [];
         let pollingPoints = [];
+        let policySeries = [];
+        let catalystSeries = [];
+        const layerState = {
+            public: true,
+            policy: true,
+            catalyst: false
+        };
         let minDate = null;
         let maxDate = null;
         let resizeRaf = null;
@@ -936,12 +1005,19 @@
                 minDate = d3.min(trendsData, d => d.date) || new Date('2004-01-01');
                 maxDate = d3.max(trendsData, d => d.date) || new Date('2023-12-31');
 
+                const POLICY_TYPES = new Set(['legislative', 'policy', 'implementation', 'policy_end', 'state', 'dividend']);
+                policySeries = buildRollingSeries(milestonesData.events || [], e => POLICY_TYPES.has(e.type));
+                catalystSeries = buildRollingSeries(milestonesData.events || [], e =>
+                    e.importance === 'critical' || e.importance === 'high'
+                );
+
                 // Setup chart
                 renderChart();
 
                 // Setup scrollama
                 setupScrollama();
                 setupResizeObserver();
+                setupLayerToggle();
 
                 // Hide loading
                 document.getElementById('loading').classList.add('hidden');
@@ -1038,6 +1114,25 @@
                 }));
         }
 
+        function buildRollingSeries(events, filterFn, windowDays = 365) {
+            if (!events || !events.length || !trendsData.length) return [];
+            const filtered = events
+                .map(e => ({ ...e, dateObj: new Date(e.date) }))
+                .filter(e => filterFn(e));
+
+            const series = trendsData.map(point => {
+                const windowStart = new Date(point.date.getTime() - windowDays * 24 * 60 * 60 * 1000);
+                const count = filtered.filter(e => e.dateObj >= windowStart && e.dateObj <= point.date).length;
+                return { date: point.date, value: count };
+            });
+
+            const max = d3.max(series, d => d.value) || 1;
+            return series.map(d => ({
+                date: d.date,
+                value: (d.value / max) * 100
+            }));
+        }
+
         function drawChart() {
             // Draw era bands (only where they intersect the data range)
             Object.entries(eraRanges).forEach(([era, range]) => {
@@ -1120,9 +1215,39 @@
             // Draw line
             svg.append('path')
                 .datum(trendsData)
-                .attr('class', 'trend-line')
+                .attr('class', 'trend-line public-line')
                 .attr('stroke', 'var(--signal)')
                 .attr('d', line);
+
+            // Policy actions line
+            if (policySeries.length) {
+                const policyLine = d3.line()
+                    .x(d => xScale(d.date))
+                    .y(d => yScale(d.value))
+                    .curve(d3.curveMonotoneX);
+
+                svg.append('path')
+                    .datum(policySeries)
+                    .attr('class', 'trend-line policy-line')
+                    .attr('stroke', 'var(--policy)')
+                    .attr('stroke-dasharray', '6 6')
+                    .attr('d', policyLine);
+            }
+
+            // Catalyst density line
+            if (catalystSeries.length) {
+                const catalystLine = d3.line()
+                    .x(d => xScale(d.date))
+                    .y(d => yScale(d.value))
+                    .curve(d3.curveMonotoneX);
+
+                svg.append('path')
+                    .datum(catalystSeries)
+                    .attr('class', 'trend-line catalyst-line')
+                    .attr('stroke', 'var(--academic)')
+                    .attr('stroke-dasharray', '2 6')
+                    .attr('d', catalystLine);
+            }
 
             // Draw key events
             if (milestonesData && milestonesData.events) {
@@ -1167,6 +1292,8 @@
                     .on('mouseenter', (event, d) => showTooltip(event, d))
                     .on('mouseleave', hideTooltip);
             }
+
+            applyLayerVisibility();
         }
 
         function updateChartForStep(step) {
@@ -1221,10 +1348,30 @@
                     .duration(reducedMotion ? 0 : 750)
                     .attr('d', area(trendsData));
 
-                svg.select('.trend-line')
+                svg.select('.public-line')
                     .transition()
                     .duration(reducedMotion ? 0 : 750)
                     .attr('d', line(trendsData));
+
+                const policyLine = d3.line()
+                    .x(d => xScale(d.date))
+                    .y(d => yScale(d.value))
+                    .curve(d3.curveMonotoneX);
+
+                const catalystLine = d3.line()
+                    .x(d => xScale(d.date))
+                    .y(d => yScale(d.value))
+                    .curve(d3.curveMonotoneX);
+
+                svg.select('.policy-line')
+                    .transition()
+                    .duration(reducedMotion ? 0 : 750)
+                    .attr('d', policyLine(policySeries));
+
+                svg.select('.catalyst-line')
+                    .transition()
+                    .duration(reducedMotion ? 0 : 750)
+                    .attr('d', catalystLine(catalystSeries));
 
                 // Update data start marker position
                 svg.select('.data-start-line')
@@ -1266,6 +1413,36 @@
                 });
 
             window.addEventListener('resize', scroller.resize);
+        }
+
+        function applyLayerVisibility() {
+            const publicOpacity = layerState.public ? 1 : 0;
+            const policyOpacity = layerState.policy ? 0.85 : 0;
+            const catalystOpacity = layerState.catalyst ? 0.85 : 0;
+
+            d3.select('.trend-area')
+                .style('opacity', layerState.public ? 0.25 : 0);
+            d3.select('.public-line')
+                .style('opacity', publicOpacity);
+            d3.select('.policy-line')
+                .style('opacity', policyOpacity);
+            d3.select('.catalyst-line')
+                .style('opacity', catalystOpacity);
+        }
+
+        function setupLayerToggle() {
+            const toggle = document.getElementById('layerToggle');
+            if (!toggle) return;
+
+            toggle.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const layer = btn.dataset.layer;
+                    if (!layer) return;
+                    layerState[layer] = !layerState[layer];
+                    btn.classList.toggle('active', layerState[layer]);
+                    applyLayerVisibility();
+                });
+            });
         }
 
         function showTooltip(event, d) {
