@@ -34,6 +34,7 @@
             --media: #3D5A80;
             --public: #2EEB78;
             --policy: #E07A5F;
+            --polling: #F4A261;
 
             /* Background */
             --paper: #FAF8F5;
@@ -172,6 +173,51 @@
             z-index: 2;
         }
 
+        .chart-legend {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            background: rgba(250, 248, 245, 0.9);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: var(--text-sm);
+            color: var(--ink-light);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 2;
+        }
+
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .legend-line {
+            width: 24px;
+            height: 2px;
+            background: var(--public);
+            border-radius: 2px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+            border: 1px solid white;
+        }
+
+        .legend-square {
+            width: 8px;
+            height: 8px;
+            background: var(--polling);
+            transform: rotate(45deg);
+        }
+
         .scrolly__chart {
             width: 100%;
             max-width: 1200px;
@@ -303,6 +349,12 @@
             font-family: 'IBM Plex Sans', sans-serif;
             fill: var(--ink);
             pointer-events: none;
+        }
+
+        .poll-marker {
+            cursor: pointer;
+            stroke: white;
+            stroke-width: 2;
         }
 
         /* Era Labels */
@@ -479,6 +531,14 @@
                 left: 1rem;
                 text-align: center;
             }
+
+            .chart-legend {
+                right: 1rem;
+                left: 1rem;
+                width: max-content;
+                margin: 0 auto;
+                align-items: center;
+            }
         }
     </style>
 </head>
@@ -517,6 +577,20 @@
     <section class="scrolly" id="scrolly">
         <div class="scrolly__graphic">
             <div class="scrolly__chart" id="chart"></div>
+            <div class="chart-legend">
+                <div class="legend-row">
+                    <span class="legend-line"></span>
+                    <span>Search interest</span>
+                </div>
+                <div class="legend-row">
+                    <span class="legend-dot"></span>
+                    <span>Milestone</span>
+                </div>
+                <div class="legend-row">
+                    <span class="legend-square"></span>
+                    <span>Polling support</span>
+                </div>
+            </div>
             <div class="scrolly__note">Google Trends data begins in 2004; earlier eras are shown via milestones.</div>
         </div>
 
@@ -675,6 +749,7 @@
         let eraRanges = {};
         let eraColors = {};
         let eventPoints = [];
+        let pollingPoints = [];
         let minDate = null;
         let maxDate = null;
         let resizeRaf = null;
@@ -809,6 +884,18 @@
                 });
         }
 
+        function buildPollingPoints(polls) {
+            if (!polls || !polls.length) return [];
+            return polls
+                .map(p => ({ ...p, dateObj: new Date(p.date) }))
+                .filter(p => p.dateObj >= minDate && p.dateObj <= maxDate)
+                .map(p => ({
+                    ...p,
+                    dateObj: p.dateObj,
+                    support: p.support ?? 0
+                }));
+        }
+
         function drawChart() {
             // Draw era bands (only where they intersect the data range)
             Object.entries(eraRanges).forEach(([era, range]) => {
@@ -922,6 +1009,22 @@
                     .on('mouseenter', (event, d) => showTooltip(event, d))
                     .on('mouseleave', hideTooltip);
             }
+
+            // Draw polling points (if available)
+            if (milestonesData && milestonesData.polling) {
+                pollingPoints = buildPollingPoints(milestonesData.polling);
+                svg.selectAll('.poll-marker')
+                    .data(pollingPoints)
+                    .enter()
+                    .append('rect')
+                    .attr('class', 'poll-marker')
+                    .attr('width', 10)
+                    .attr('height', 10)
+                    .attr('fill', 'var(--polling)')
+                    .attr('transform', d => `translate(${xScale(d.dateObj) - 5},${yScale(d.support) - 5}) rotate(45 ${xScale(d.dateObj)},${yScale(d.support)})`)
+                    .on('mouseenter', (event, d) => showTooltip(event, d))
+                    .on('mouseleave', hideTooltip);
+            }
         }
 
         function updateChartForStep(step) {
@@ -998,6 +1101,11 @@
                     .duration(reducedMotion ? 0 : 750)
                     .attr('cx', d => xScale(d.dateObj))
                     .attr('cy', d => yScale(d.trendValue));
+
+                svg.selectAll('.poll-marker')
+                    .transition()
+                    .duration(reducedMotion ? 0 : 750)
+                    .attr('transform', d => `translate(${xScale(d.dateObj) - 5},${yScale(d.support) - 5}) rotate(45 ${xScale(d.dateObj)},${yScale(d.support)})`);
             }
         }
 
@@ -1023,8 +1131,14 @@
             const dateValue = d.dateObj || new Date(d.date);
             tooltip.querySelector('.tooltip__date').textContent =
                 dateValue.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            tooltip.querySelector('.tooltip__title').textContent = d.title;
-            tooltip.querySelector('.tooltip__figure').textContent = d.figure ? `— ${d.figure}` : '';
+            if (d.support !== undefined) {
+                tooltip.querySelector('.tooltip__title').textContent = `${d.support}% support`;
+                tooltip.querySelector('.tooltip__figure').textContent =
+                    `${d.source || 'Polling'}${d.context ? ` — ${d.context}` : ''}`;
+            } else {
+                tooltip.querySelector('.tooltip__title').textContent = d.title;
+                tooltip.querySelector('.tooltip__figure').textContent = d.figure ? `— ${d.figure}` : '';
+            }
 
             tooltip.style.left = (event.pageX + 10) + 'px';
             tooltip.style.top = (event.pageY - 10) + 'px';
