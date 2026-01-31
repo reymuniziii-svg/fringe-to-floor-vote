@@ -17,29 +17,35 @@
     <script src="https://unpkg.com/scrollama@3.2.0/build/scrollama.min.js"></script>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
         :root {
             /* Era colors */
-            --intellectual: #4A90D9;
-            --wilderness: #7A7A7A;
-            --silicon: #F5A623;
-            --yang: #1F78B4;
-            --covid: #E31A1C;
-            --aftermath: #33A02C;
+            --intellectual: #5DB7FF;
+            --wilderness: #6B7280;
+            --silicon: #FFB454;
+            --yang: #6E7BFF;
+            --covid: #FF4D4D;
+            --aftermath: #45D48A;
 
             /* Data layers */
-            --academic: #9B5DE5;
-            --media: #3D5A80;
-            --public: #2EEB78;
-            --policy: #E07A5F;
+            --academic: #B084F5;
+            --media: #5AA1FF;
+            --public: #59F5FF;
+            --policy: #FF8A65;
             --polling: #F4A261;
 
-            /* Background */
-            --paper: #FAF8F5;
-            --ink: #2C2C2C;
-            --ink-light: #4a4a4a;
+            /* Observatory theme */
+            --paper: #0B0F1A;
+            --panel: rgba(10, 16, 30, 0.78);
+            --panel-border: rgba(255,255,255,0.08);
+            --panel-glow: rgba(89, 245, 255, 0.12);
+            --ink: #E8F0FF;
+            --ink-light: #A7B4D6;
+            --grid: rgba(255,255,255,0.05);
+            --signal: #59F5FF;
+            --signal-dim: rgba(89,245,255,0.18);
 
             /* Typography scale */
             --text-xs: 0.75rem;
@@ -65,16 +71,18 @@
         }
 
         body {
-            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            font-family: 'Space Grotesk', -apple-system, sans-serif;
             font-weight: 400;
             line-height: 1.6;
             color: var(--ink);
-            background: var(--paper);
+            background: radial-gradient(1200px 600px at 20% -10%, rgba(89, 245, 255, 0.08), transparent 60%),
+                radial-gradient(900px 500px at 80% 0%, rgba(124, 77, 255, 0.15), transparent 65%),
+                var(--paper);
             overflow-x: hidden;
         }
 
         h1, h2, h3 {
-            font-family: 'EB Garamond', Georgia, serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-weight: 400;
             line-height: 1.2;
         }
@@ -92,9 +100,33 @@
             align-items: center;
             text-align: center;
             padding: 2rem;
-            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            background: radial-gradient(800px 500px at 50% -10%, rgba(89,245,255,0.18), transparent 60%),
+                radial-gradient(600px 400px at 80% 0%, rgba(124,77,255,0.2), transparent 65%),
+                #0A0F1C;
             color: white;
             position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 4px 4px, 100% 120px;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(600px 300px at 50% 0%, rgba(89,245,255,0.12), transparent 60%);
+            opacity: 0.8;
+            pointer-events: none;
         }
 
         .hero__eyebrow {
@@ -122,25 +154,67 @@
 
         .hero__hook {
             font-size: var(--text-2xl);
-            font-family: 'EB Garamond', serif;
+            font-family: 'Cormorant Garamond', serif;
             font-style: italic;
             max-width: 700px;
             color: rgba(255,255,255,0.9);
-            padding: 2rem;
-            border-left: 3px solid var(--intellectual);
+            padding: 2rem 2.5rem;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-left: 3px solid var(--signal);
+            background: rgba(8, 12, 24, 0.6);
             text-align: left;
             margin-bottom: 3rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+        }
+
+        .hero__signal {
+            width: min(900px, 90vw);
+            margin: 0 auto 2.5rem;
+        }
+
+        .hero__readout {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            color: rgba(255,255,255,0.7);
+            font-size: var(--text-sm);
+            margin-bottom: 2rem;
+        }
+
+        .readout-chip {
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(8,12,24,0.6);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
 
         .hero__scroll {
             position: absolute;
             bottom: 2rem;
             animation: bounce 2s infinite;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .hero > * {
+            position: relative;
+            z-index: 1;
         }
 
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(10px); }
+        }
+
+        @keyframes signalPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .hero__signal path {
+            animation: signalPulse 4s ease-in-out infinite;
         }
 
         /* Scrollytelling Container */
@@ -156,29 +230,57 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--paper);
+            background: linear-gradient(180deg, rgba(8,12,24,0.98) 0%, rgba(8,12,24,0.92) 100%);
             z-index: 1;
+            overflow: hidden;
+        }
+
+        .scrolly__graphic::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+            background-size: 80px 80px;
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .scrolly__graphic::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+            background-size: 3px 3px;
+            opacity: 0.15;
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .scrolly__note {
             position: absolute;
             bottom: 1.5rem;
             right: 2rem;
-            background: rgba(250, 248, 245, 0.9);
+            background: rgba(8, 12, 24, 0.75);
             color: var(--ink-light);
             font-size: var(--text-sm);
             padding: 0.5rem 0.75rem;
             border-radius: 8px;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
             z-index: 2;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.45);
         }
 
         .chart-legend {
             position: absolute;
             top: 1.5rem;
             right: 2rem;
-            background: rgba(250, 248, 245, 0.9);
-            border: 1px solid rgba(0,0,0,0.05);
+            background: rgba(8, 12, 24, 0.75);
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 8px;
             padding: 0.75rem 1rem;
             font-size: var(--text-sm);
@@ -187,6 +289,8 @@
             flex-direction: column;
             gap: 0.5rem;
             z-index: 2;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.45);
         }
 
         .legend-row {
@@ -207,8 +311,8 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #666;
-            border: 1px solid white;
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(255,255,255,0.6);
         }
 
         .legend-square {
@@ -221,8 +325,10 @@
         .scrolly__chart {
             width: 100%;
             max-width: 1200px;
-            height: 60vh;
+            height: 65vh;
             padding: 2rem;
+            position: relative;
+            z-index: 1;
         }
 
         .scrolly__steps {
@@ -241,12 +347,14 @@
         }
 
         .step__content {
-            background: white;
+            background: var(--panel);
             padding: 2rem 2.5rem;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            max-width: 420px;
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+            max-width: 440px;
             margin-left: 5%;
+            backdrop-filter: blur(10px);
         }
 
         .step__era {
@@ -277,12 +385,13 @@
 
         .step__aha {
             margin-top: 1.5rem;
-            padding: 1rem;
-            background: #f8f7f4;
+            padding: 1rem 1.25rem;
+            background: rgba(10, 16, 30, 0.7);
             border-radius: 8px;
             font-style: italic;
-            font-family: 'EB Garamond', serif;
+            font-family: 'Cormorant Garamond', serif;
             font-size: var(--text-lg);
+            border-left: 2px solid var(--signal);
         }
 
         .step__stat {
@@ -290,6 +399,7 @@
             font-size: var(--text-4xl);
             font-weight: 300;
             margin: 1rem 0;
+            color: var(--signal);
         }
 
         /* Timeline Chart */
@@ -300,14 +410,14 @@
         }
 
         .axis text {
-            font-family: 'IBM Plex Sans', sans-serif;
+            font-family: 'Space Grotesk', sans-serif;
             font-size: 12px;
             fill: var(--ink-light);
         }
 
         .axis path,
         .axis line {
-            stroke: #ddd;
+            stroke: rgba(255,255,255,0.12);
         }
 
         .era-band {
@@ -315,7 +425,7 @@
         }
 
         .data-start-line {
-            stroke: #bbb;
+            stroke: rgba(255,255,255,0.25);
             stroke-dasharray: 4 4;
         }
 
@@ -329,15 +439,18 @@
             stroke-width: 2.5;
             stroke-linecap: round;
             stroke-linejoin: round;
+            filter: drop-shadow(0 0 10px rgba(89,245,255,0.35));
         }
 
         .trend-area {
-            opacity: 0.2;
+            opacity: 0.25;
+            filter: drop-shadow(0 0 20px rgba(89,245,255,0.18));
         }
 
         .event-marker {
             cursor: pointer;
             transition: transform 0.2s ease;
+            filter: drop-shadow(0 0 6px rgba(255,255,255,0.35));
         }
 
         .event-marker:hover {
@@ -346,8 +459,8 @@
 
         .event-label {
             font-size: 11px;
-            font-family: 'IBM Plex Sans', sans-serif;
-            fill: var(--ink);
+            font-family: 'Space Grotesk', sans-serif;
+            fill: var(--ink-light);
             pointer-events: none;
         }
 
@@ -355,6 +468,7 @@
             cursor: pointer;
             stroke: white;
             stroke-width: 2;
+            filter: drop-shadow(0 0 6px rgba(244,162,97,0.6));
         }
 
         /* Era Labels */
@@ -375,7 +489,8 @@
             align-items: center;
             text-align: center;
             padding: 4rem 2rem;
-            background: linear-gradient(180deg, var(--paper) 0%, #f0ede8 100%);
+            background: radial-gradient(800px 500px at 50% 0%, rgba(89,245,255,0.08), transparent 60%),
+                linear-gradient(180deg, #0B0F1A 0%, #0A0F1C 100%);
         }
 
         .conclusion__title {
@@ -399,6 +514,7 @@
             font-size: var(--text-sm);
             font-weight: 500;
             color: white;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.35);
         }
 
         .lifecycle-stage.fringe { background: var(--academic); }
@@ -411,7 +527,7 @@
         .lifecycle-arrow {
             display: flex;
             align-items: center;
-            color: var(--ink-light);
+            color: rgba(255,255,255,0.45);
             font-size: 1.5rem;
         }
 
@@ -427,7 +543,7 @@
         footer {
             padding: 3rem 2rem;
             text-align: center;
-            background: #1a1a2e;
+            background: #0A0F1C;
             color: rgba(255,255,255,0.6);
             font-size: var(--text-sm);
         }
@@ -439,15 +555,17 @@
         /* Tooltip */
         .tooltip {
             position: fixed;
-            background: white;
+            background: rgba(8, 12, 24, 0.95);
             padding: 1rem;
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s ease;
             z-index: 1000;
             max-width: 280px;
+            color: var(--ink);
         }
 
         .tooltip.visible {
@@ -479,7 +597,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: var(--paper);
+            background: #0A0F1C;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -496,8 +614,8 @@
         .loading__spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid #e0e0e0;
-            border-top-color: var(--ink);
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: var(--signal);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -540,6 +658,17 @@
                 align-items: center;
             }
         }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            .hero__signal path,
+            .hero__scroll {
+                animation: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -562,6 +691,19 @@
         <p class="hero__subtitle">
             How Universal Basic Income traveled from academic obscurity to pandemic policy in 58 years.
         </p>
+        <div class="hero__signal">
+            <svg viewBox="0 0 900 120" width="100%" height="120" fill="none" stroke="currentColor">
+                <path d="M0,80 C80,20 160,120 240,70 C320,20 400,110 480,60 C560,10 640,110 720,55 C800,10 860,90 900,40"
+                      stroke="rgba(89,245,255,0.8)" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M0,90 C80,40 160,120 240,85 C320,40 400,120 480,80 C560,30 640,120 720,75 C800,30 860,110 900,65"
+                      stroke="rgba(124,77,255,0.35)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="6 8"/>
+            </svg>
+        </div>
+        <div class="hero__readout mono">
+            <span class="readout-chip">Signal Span: 2004–2023</span>
+            <span class="readout-chip">402 Data Points</span>
+            <span class="readout-chip">58-Year Story</span>
+        </div>
         <blockquote class="hero__hook">
             In 1962, the most radical economic idea in America was supported by both Milton Friedman and Martin Luther King Jr.<br><br>
             Then it disappeared for 50 years.
@@ -952,7 +1094,7 @@
                 .attr('x', -height / 2)
                 .attr('text-anchor', 'middle')
                 .style('font-size', '12px')
-                .style('fill', '#666')
+                .style('fill', 'var(--ink-light)')
                 .text('Search Interest');
 
             // Area generator
@@ -972,14 +1114,14 @@
             svg.append('path')
                 .datum(trendsData)
                 .attr('class', 'trend-area')
-                .attr('fill', '#2EEB78')
+                .attr('fill', 'var(--signal-dim)')
                 .attr('d', area);
 
             // Draw line
             svg.append('path')
                 .datum(trendsData)
                 .attr('class', 'trend-line')
-                .attr('stroke', '#2EEB78')
+                .attr('stroke', 'var(--signal)')
                 .attr('d', line);
 
             // Draw key events
