@@ -159,6 +159,19 @@
             z-index: 1;
         }
 
+        .scrolly__note {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 2rem;
+            background: rgba(250, 248, 245, 0.9);
+            color: var(--ink-light);
+            font-size: var(--text-sm);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.05);
+            z-index: 2;
+        }
+
         .scrolly__chart {
             width: 100%;
             max-width: 1200px;
@@ -253,6 +266,16 @@
 
         .era-band {
             opacity: 0.15;
+        }
+
+        .data-start-line {
+            stroke: #bbb;
+            stroke-dasharray: 4 4;
+        }
+
+        .data-start-label {
+            font-size: 11px;
+            fill: var(--ink-light);
         }
 
         .trend-line {
@@ -450,6 +473,12 @@
             .lifecycle-arrow {
                 transform: rotate(90deg);
             }
+
+            .scrolly__note {
+                right: 1rem;
+                left: 1rem;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -488,6 +517,7 @@
     <section class="scrolly" id="scrolly">
         <div class="scrolly__graphic">
             <div class="scrolly__chart" id="chart"></div>
+            <div class="scrolly__note">Google Trends data begins in 2004; earlier eras are shown via milestones.</div>
         </div>
 
         <div class="scrolly__steps">
@@ -630,9 +660,7 @@
     <!-- Footer -->
     <footer>
         <p>
-            Data sources: <a href="https://trends.google.com">Google Trends</a>,
-            <a href="https://www.gdeltproject.org/">GDELT</a>,
-            <a href="https://api.congress.gov/">Congress.gov</a>
+            Data: <a href="https://trends.google.com">Google Trends</a> (2004–2023) + curated milestone timeline (see README)
         </p>
         <p style="margin-top: 0.5rem;">
             Built with D3.js and Scrollama
@@ -644,29 +672,30 @@
         let trendsData = [];
         let milestonesData = null;
         let currentStep = 0;
+        let eraRanges = {};
+        let eraColors = {};
+        let eventPoints = [];
+        let minDate = null;
+        let maxDate = null;
+        let resizeRaf = null;
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         // Chart dimensions
         let width, height, margin;
         let svg, xScale, yScale;
 
-        // Era date ranges for highlighting
-        const eraRanges = {
-            intellectual: { start: new Date('1962-01-01'), end: new Date('1972-12-31') },
-            wilderness: { start: new Date('1973-01-01'), end: new Date('2007-12-31') },
-            silicon: { start: new Date('2008-01-01'), end: new Date('2016-11-05') },
-            yang: { start: new Date('2017-11-06'), end: new Date('2020-02-11') },
-            covid: { start: new Date('2020-03-01'), end: new Date('2020-12-31') },
-            aftermath: { start: new Date('2021-01-01'), end: new Date('2023-12-31') }
-        };
-
-        const eraColors = {
-            intellectual: '#4A90D9',
-            wilderness: '#7A7A7A',
-            silicon: '#F5A623',
-            yang: '#1F78B4',
-            covid: '#E31A1C',
-            aftermath: '#33A02C'
-        };
+        function buildEraMaps(eras) {
+            const ranges = {};
+            const colors = {};
+            eras.forEach(era => {
+                ranges[era.id] = {
+                    start: new Date(era.start),
+                    end: new Date(era.end)
+                };
+                colors[era.id] = era.color;
+            });
+            return { ranges, colors };
+        }
 
         // Initialize
         async function init() {
@@ -683,12 +712,19 @@
                 }));
                 milestonesData = milestones;
 
+                const maps = buildEraMaps(milestonesData.eras || []);
+                eraRanges = maps.ranges;
+                eraColors = maps.colors;
+
+                minDate = d3.min(trendsData, d => d.date) || new Date('2004-01-01');
+                maxDate = d3.max(trendsData, d => d.date) || new Date('2023-12-31');
+
                 // Setup chart
-                setupChart();
-                drawChart();
+                renderChart();
 
                 // Setup scrollama
                 setupScrollama();
+                setupResizeObserver();
 
                 // Hide loading
                 document.getElementById('loading').classList.add('hidden');
@@ -700,6 +736,26 @@
                     <div style="margin-top: 1rem;">Run via HTTP server: python3 -m http.server</div>
                 `;
             }
+        }
+
+        function renderChart() {
+            d3.select('#chart').selectAll('*').remove();
+            setupChart();
+            drawChart();
+            if (currentStep > 0) {
+                updateChartForStep(currentStep);
+            }
+        }
+
+        function setupResizeObserver() {
+            const container = document.getElementById('chart');
+            if (!container || typeof ResizeObserver === 'undefined') return;
+
+            const observer = new ResizeObserver(() => {
+                if (resizeRaf) cancelAnimationFrame(resizeRaf);
+                resizeRaf = requestAnimationFrame(() => renderChart());
+            });
+            observer.observe(container);
         }
 
         function setupChart() {
@@ -719,7 +775,7 @@
 
             // Scales
             xScale = d3.scaleTime()
-                .domain([new Date('2004-01-01'), new Date('2023-12-31')])
+                .domain([minDate || new Date('2004-01-01'), maxDate || new Date('2023-12-31')])
                 .range([0, width]);
 
             yScale = d3.scaleLinear()
@@ -727,19 +783,47 @@
                 .range([height, 0]);
         }
 
+        const bisectDate = d3.bisector(d => d.date).left;
+
+        function getClosestTrendPoint(date) {
+            if (!trendsData.length) return null;
+            const i = bisectDate(trendsData, date, 1);
+            const a = trendsData[i - 1];
+            const b = trendsData[i] || a;
+            if (!a) return b;
+            return (date - a.date) > (b.date - date) ? b : a;
+        }
+
+        function buildEventPoints(events) {
+            if (!events || !events.length) return [];
+            return events
+                .map(e => ({ ...e, dateObj: new Date(e.date) }))
+                .filter(e => e.dateObj >= minDate && e.dateObj <= maxDate)
+                .map(e => {
+                    const closest = getClosestTrendPoint(e.dateObj);
+                    return {
+                        ...e,
+                        dateObj: e.dateObj,
+                        trendValue: closest ? closest.interest : 0
+                    };
+                });
+        }
+
         function drawChart() {
-            // Draw era bands
+            // Draw era bands (only where they intersect the data range)
             Object.entries(eraRanges).forEach(([era, range]) => {
-                if (range.start >= new Date('2004-01-01')) {
-                    svg.append('rect')
-                        .attr('class', 'era-band')
-                        .attr('x', xScale(range.start))
-                        .attr('y', 0)
-                        .attr('width', Math.max(0, xScale(range.end) - xScale(range.start)))
-                        .attr('height', height)
-                        .attr('fill', eraColors[era])
-                        .attr('opacity', 0);
-                }
+                if (range.end < minDate || range.start > maxDate) return;
+                const start = range.start < minDate ? minDate : range.start;
+                const end = range.end > maxDate ? maxDate : range.end;
+                svg.append('rect')
+                    .attr('class', 'era-band')
+                    .attr('data-era', era)
+                    .attr('x', xScale(start))
+                    .attr('y', 0)
+                    .attr('width', Math.max(0, xScale(end) - xScale(start)))
+                    .attr('height', height)
+                    .attr('fill', eraColors[era])
+                    .attr('opacity', 0);
             });
 
             // X Axis
@@ -749,6 +833,23 @@
                 .call(d3.axisBottom(xScale)
                     .ticks(d3.timeYear.every(2))
                     .tickFormat(d3.timeFormat('%Y')));
+
+            // Data start marker
+            if (minDate) {
+                const xStart = xScale(minDate);
+                svg.append('line')
+                    .attr('class', 'data-start-line')
+                    .attr('x1', xStart)
+                    .attr('x2', xStart)
+                    .attr('y1', 0)
+                    .attr('y2', height);
+
+                svg.append('text')
+                    .attr('class', 'data-start-label')
+                    .attr('x', xStart + 6)
+                    .attr('y', 14)
+                    .text('Google Trends data begins');
+            }
 
             // Y Axis
             svg.append('g')
@@ -796,25 +897,25 @@
 
             // Draw key events
             if (milestonesData && milestonesData.events) {
-                const keyEvents = milestonesData.events.filter(e =>
-                    e.importance === 'high' || e.importance === 'critical'
+                eventPoints = buildEventPoints(milestonesData.events);
+                const sizeByImportance = {
+                    critical: 8,
+                    high: 6,
+                    medium: 4,
+                    low: 3
+                };
+                const visibleEvents = eventPoints.filter(e =>
+                    e.importance === 'critical' || e.importance === 'high' || e.importance === 'medium'
                 );
 
                 svg.selectAll('.event-marker')
-                    .data(keyEvents.filter(e => new Date(e.date) >= new Date('2004-01-01')))
+                    .data(visibleEvents)
                     .enter()
                     .append('circle')
                     .attr('class', 'event-marker')
-                    .attr('cx', d => xScale(new Date(d.date)))
-                    .attr('cy', d => {
-                        // Find corresponding trend value
-                        const eventDate = new Date(d.date);
-                        const closest = trendsData.reduce((prev, curr) =>
-                            Math.abs(curr.date - eventDate) < Math.abs(prev.date - eventDate) ? curr : prev
-                        );
-                        return yScale(closest.interest);
-                    })
-                    .attr('r', 6)
+                    .attr('cx', d => xScale(d.dateObj))
+                    .attr('cy', d => yScale(d.trendValue))
+                    .attr('r', d => sizeByImportance[d.importance] || 4)
                     .attr('fill', d => eraColors[d.era] || '#666')
                     .attr('stroke', 'white')
                     .attr('stroke-width', 2)
@@ -829,34 +930,31 @@
             // Highlight current era band
             svg.selectAll('.era-band')
                 .transition()
-                .duration(500)
+                .duration(reducedMotion ? 0 : 500)
                 .attr('opacity', function() {
                     const rect = d3.select(this);
-                    // Check if this band corresponds to the current era
-                    const fill = rect.attr('fill');
-                    const currentColor = eraColors[stepEra];
-                    return fill === currentColor ? 0.25 : 0.05;
+                    return rect.attr('data-era') === stepEra ? 0.25 : 0.05;
                 });
 
             // Zoom to era time range if available
             if (stepEra && eraRanges[stepEra]) {
                 const range = eraRanges[stepEra];
                 // Only zoom for eras within our data range
-                if (range.start >= new Date('2004-01-01')) {
+                if (range.end >= minDate && range.start <= maxDate) {
                     const padding = (range.end - range.start) * 0.1;
                     xScale.domain([
-                        new Date(range.start.getTime() - padding),
-                        new Date(range.end.getTime() + padding)
+                        new Date(Math.max(range.start.getTime() - padding, minDate.getTime())),
+                        new Date(Math.min(range.end.getTime() + padding, maxDate.getTime()))
                     ]);
                 } else {
                     // Reset to full range
-                    xScale.domain([new Date('2004-01-01'), new Date('2023-12-31')]);
+                    xScale.domain([minDate, maxDate]);
                 }
 
                 // Update axis
                 svg.select('.x-axis')
                     .transition()
-                    .duration(750)
+                    .duration(reducedMotion ? 0 : 750)
                     .call(d3.axisBottom(xScale)
                         .ticks(6)
                         .tickFormat(d3.timeFormat('%Y')));
@@ -875,26 +973,31 @@
 
                 svg.select('.trend-area')
                     .transition()
-                    .duration(750)
+                    .duration(reducedMotion ? 0 : 750)
                     .attr('d', area(trendsData));
 
                 svg.select('.trend-line')
                     .transition()
-                    .duration(750)
+                    .duration(reducedMotion ? 0 : 750)
                     .attr('d', line(trendsData));
+
+                // Update data start marker position
+                svg.select('.data-start-line')
+                    .transition()
+                    .duration(reducedMotion ? 0 : 750)
+                    .attr('x1', xScale(minDate))
+                    .attr('x2', xScale(minDate));
+                svg.select('.data-start-label')
+                    .transition()
+                    .duration(reducedMotion ? 0 : 750)
+                    .attr('x', xScale(minDate) + 6);
 
                 // Update event markers
                 svg.selectAll('.event-marker')
                     .transition()
-                    .duration(750)
-                    .attr('cx', d => xScale(new Date(d.date)))
-                    .attr('cy', d => {
-                        const eventDate = new Date(d.date);
-                        const closest = trendsData.reduce((prev, curr) =>
-                            Math.abs(curr.date - eventDate) < Math.abs(prev.date - eventDate) ? curr : prev
-                        );
-                        return yScale(closest.interest);
-                    });
+                    .duration(reducedMotion ? 0 : 750)
+                    .attr('cx', d => xScale(d.dateObj))
+                    .attr('cy', d => yScale(d.trendValue));
             }
         }
 
@@ -917,8 +1020,9 @@
 
         function showTooltip(event, d) {
             const tooltip = document.getElementById('tooltip');
+            const dateValue = d.dateObj || new Date(d.date);
             tooltip.querySelector('.tooltip__date').textContent =
-                new Date(d.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                dateValue.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             tooltip.querySelector('.tooltip__title').textContent = d.title;
             tooltip.querySelector('.tooltip__figure').textContent = d.figure ? `— ${d.figure}` : '';
 
